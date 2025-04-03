@@ -1,3 +1,24 @@
+NOTEs:
+    Requries TLS 
+
+
+
+```bash
+mkdir model
+cd model 
+
+
+
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx-web/resolve/main/config.json
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx-web/resolve/main/onnx/model_q4f16.onnx
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx-web/resolve/main/onnx/model_q4f16.onnx_data
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx-web/resolve/main/tokenizer.json
+wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx-web/resolve/main/tokenizer_config.json
+
+```
+
+
+
 # Local Chatbot in the browser using Phi3, ONNX Runtime Web and WebGPU
 
 This repository contains an example of running [Phi-3-mini-4k-instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct) in your browser using [ONNX Runtime Web](https://github.com/microsoft/onnxruntime) with WebGPU.

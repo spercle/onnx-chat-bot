@@ -2,10 +2,9 @@ import { env, AutoTokenizer } from '@xenova/transformers';
 import { LLM } from './llm.js';
 import { marked } from 'marked';
 
-
 const MODELS = {
-  "phi3": { name: "phi3", path: "microsoft/Phi-3-mini-4k-instruct-onnx-web", externaldata: true },
-  "phi3dev": { name: "phi3dev", path: "schmuell/Phi-3-mini-4k-instruct-onnx-web", externaldata: true },
+  "phi3": { name: "phi3", path: "./model", externaldata: true },
+  "phi3dev": { name: "phi3dev", path: "./model", externaldata: true },
 }
 
 const preCannedQueries = {
@@ -27,14 +26,11 @@ marked.use({ mangle: false, headerIds: false });
 const sendButton = document.getElementById('send-button');
 const scrollWrapper = document.getElementById('scroll-wrapper');
 
-//
-// auto scroll the content area until a user scrolls up
-//
 let isAutoScrollOn = true;
 let lastKnownScrollPosition = 0;
 let ticking = false;
 
-const autoScroller = new ResizeObserver(() => {
+const autoScroller = new ResizeObserver  (() => {
   if (isAutoScrollOn) {
     scrollWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
   }
@@ -59,10 +55,6 @@ document.addEventListener("scroll", () => {
   lastKnownScrollPosition = window.scrollY;
 });
 
-
-//
-// make response available for copying to clipboard
-//
 function copyTextToClipboard(responseDiv) {
   let elem = responseDiv;
   const copyButton = document.createElement('button');
@@ -75,16 +67,12 @@ function copyTextToClipboard(responseDiv) {
   responseDiv.appendChild(elem);
 }
 
-// 
-// user hits send, enter or ctl enter
-//
 async function submitRequest(e) {
   if (sendButton.innerHTML == "Stop") {
     llm.abort();
     return;
   }
 
-  // enter clears the chat history, ctl enter will continue the conversation
   const continuation = e.ctrlKey && e.key === 'Enter';
 
   document.getElementById('chat-container').style.display = 'block';
@@ -103,14 +91,12 @@ async function submitRequest(e) {
     context = "";
   }
 
-  // append to chat history
   let chatHistory = document.getElementById('chat-history');
   let userMessageDiv = document.createElement('div');
   userMessageDiv.className = 'mb-2 user-message';
   userMessageDiv.innerText = input;
   chatHistory.appendChild(userMessageDiv);
 
-  // container for llm response
   let responseDiv = document.createElement('div');
   responseDiv.className = 'response-message mb-2 text-start';
   responseDiv.style.minHeight = '3em';
@@ -120,10 +106,8 @@ async function submitRequest(e) {
   responseDiv.appendChild(spinner);
   chatHistory.appendChild(responseDiv);
 
-  // toggle button to stop text generation
   sendButton.innerHTML = "Stop";
 
-  // change autoScroller to keep track of our new responseDiv
   autoScroller.observe(responseDiv);
 
   if (continuation) {
@@ -143,14 +127,9 @@ async function submitRequest(e) {
     spinner.remove();
   });
 
-  // Clear user input
   document.getElementById('user-input').value = '';
 }
 
-
-// 
-// event listener for Ctrl+Enter or Enter
-//
 document.getElementById('user-input').addEventListener('keydown', function (e) {
   if (e.ctrlKey) {
     if (e.key === 'Enter') {
@@ -179,7 +158,7 @@ function getConfig() {
     show_special: 0,
     csv: 0,
     max_tokens: 9999,
-    local: 0,
+    local: 1,
   }
   let vars = query.split("&");
   for (var i = 0; i < vars.length; i++) {
@@ -205,17 +184,28 @@ function getConfig() {
 
 const config = getConfig();
 
-// setup for transformers.js tokenizer
-env.localModelPath = 'models';
-env.allowRemoteModels = config.local == 0;
-env.allowLocalModels = config.local == 1;
+// Setup for transformers.js tokenizer
+env.localModelPath = './model';
+env.allowRemoteModels = false;
+env.allowLocalModels = true;
+env.backends.onnx.localModelPath = './model';
+env.remoteHost = ''; // Disable any remote host
+env.remotePathTemplate = ''; // Disable remote path construction
+// Add debugging to verify environment settings
+console.log("Environment settings:", {
+  localModelPath: env.localModelPath,
+  allowRemoteModels: env.allowRemoteModels,
+  allowLocalModels: env.allowLocalModels,
+  remoteHost: env.remoteHost,
+  remotePathTemplate: env.remotePathTemplate,
+});
 
 let tokenizer;
 
 const llm = new LLM();
 
 function token_to_text(tokenizer, tokens, startidx) {
-  const txt = tokenizer.decode(tokens.slice(startidx), { skip_special_tokens: config.show_special != 1, });
+  const txt = tokenizer.decode(tokens.slice(startidx), { skip_special_tokens: config.show_special != 1 });
   return txt;
 }
 
@@ -224,15 +214,12 @@ async function Query(continuation, query, cb) {
 
   const { input_ids } = await tokenizer(prompt, { return_tensor: false, padding: true, truncation: true });
 
-  // clear caches 
-  // TODO: use kv_cache for continuation
   llm.initilize_feed();
 
   const start_timer = performance.now();
   const output_index = llm.output_tokens.length + input_ids.length;
   const output_tokens = await llm.generate(input_ids, (output_tokens) => {
     if (output_tokens.length == input_ids.length + 1) {
-      // time to first token
       const took = (performance.now() - start_timer) / 1000;
       console.log(`time to first token in ${took.toFixed(1)}sec, ${input_ids.length} tokens`);
     }
@@ -245,12 +232,18 @@ async function Query(continuation, query, cb) {
   console.log(`${seqlen} tokens in ${took.toFixed(1)}sec, ${(seqlen / took).toFixed(2)} tokens/sec`);
 }
 
-//
-// Load the model and tokenizer
-//
 async function Init(hasFP16) {
   try {
-    tokenizer = await AutoTokenizer.from_pretrained(config.model.path);
+    // Explicitly load tokenizer from ./model with debugging
+    console.log("Attempting to load tokenizer from './model'");
+    tokenizer = await AutoTokenizer.from_pretrained('./model', {
+      local_files_only: true,
+      // Explicitly specify file paths to avoid subpath issues
+      config: './model/config.json',
+      tokenizer_config: './model/tokenizer_config.json',
+      tokenizer: './model/tokenizer.json',
+    });
+    console.log("Tokenizer loaded successfully");
 
     log("Loading model...");
     await llm.load(config.model, {
@@ -263,20 +256,17 @@ async function Init(hasFP16) {
     });
     log("Ready.");
   } catch (error) {
-    log(error);
+    log("Init error: " + error.message);
+    console.error("Full error:", error);
   }
 }
 
-//
-// Check if we have webgpu and fp16
-//
 async function hasWebGPU() {
-  // returns 0 for webgpu with f16, 1 for webgpu without f16, 2 for no webgpu
   if (!("gpu" in navigator)) {
     return 2;
   }
   try {
-    const adapter = await navigator.gpu.requestAdapter()
+    const adapter = await navigator.gpu.requestAdapter();
     if (adapter.features.has('shader-f16')) {
       return 0;
     }
@@ -293,7 +283,6 @@ window.onload = () => {
         log("Your GPU or Browser does not support webgpu with fp16, using fp32 instead.");
       }
       Init(supported === 0).then(() => {
-        // adjustPadding();
         sendButton.addEventListener('click', submitRequest);
         const userInput = document.getElementById('user-input');
         document.getElementById("status").style.display = "none";
