@@ -1,9 +1,7 @@
-name: NodeJS with Webpack
+name: Build and Deploy with Webpack
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
     branches: [ "master" ]
 
 jobs:
@@ -12,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [18.x] # use one version for now
 
     steps:
       - uses: actions/checkout@v4
@@ -27,10 +25,15 @@ jobs:
           npm install
           npx webpack
 
-      # Only deploy once (not for every node version)
+      - name: Check dist folder
+        run: |
+          echo "📁 dist folder contents:"
+          ls -al dist
+
       - name: Deploy to GitHub Pages
-        if: matrix.node-version == '18.x' && github.ref == 'refs/heads/master'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # change if your output dir is different
+          publish_dir: ./dist
+          user_name: github-actions
+          user_email: github-actions@github.com
