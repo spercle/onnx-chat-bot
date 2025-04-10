@@ -9,22 +9,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Step 4: Build the project
       - name: Build the project
         run: npm run build
 
-      - name: Deploy dist folder to gh-pages
+      # Step 5: Deploy index.html, main.css, and dist folder to gh-pages
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
+          publish_dir: ./  # This will publish everything at the root of the repository (including dist)
+          # The default publish branch is `gh-pages`, so we don't need to specify it here
