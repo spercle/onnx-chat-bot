@@ -1,43 +1,43 @@
-<!doctype html>
-<html lang="en">
+name: Deploy to GitHub Pages
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous" />
-  <link rel="stylesheet" href="main.css">
+on:
+  push:
+    branches: [master]
 
-    <title>Chat with onnxruntime-web</title>
-</head>
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-<body data-bs-theme="dark">
-  <div id="root"></div>
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-  <div class="container">
-    <div class="row pt-3">
-      <div class="col-md-8 col-12">
-        <h2>Chat with onnxruntime-web</h2>
-      </div>
-      <div id="status">
-      </div>
-    </div>
-    <div id="scroll-wrapper">
-      <div id="chat-container" class="card">
-        <div class="card-body">
-          <div id="chat-history"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="container p-0 card" id="input-area">
-    <div class="input-group">
-      <textarea class="form-control" id="user-input" placeholder="Type your question here ..."></textarea>
-      <button id="send-button" class="btn btn-primary">Send</button>
-    </div>
-  </div>
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-  <script type="module" src="dist/main.js"></script>
-</body>
+      - name: Install dependencies
+        run: npm install
 
-</html>
+      - name: Build the project
+        run: npm run build
+
+      - name: Prepare deployment folder
+        run: |
+          # Clone the gh-pages branch to a temp directory
+          git clone --depth 1 --branch gh-pages https://github.com/${{ github.repository }} gh-pages
+          
+          # Copy the index.html file to the root of the gh-pages branch
+          cp ./index.html ./gh-pages/
+
+          # Copy the main.css file to the root of the gh-pages branch (if it's not already in the root of gh-pages)
+          cp ./main.css ./gh-pages/
+
+          # Copy the dist folder to the root of the gh-pages branch
+          cp -r ./dist ./gh-pages/
+
+          # Commit and push the changes
+          git -C gh-pages add index.html main.css dist/
+          git -C gh-pages commit -m "Deploy index.html, main.css, and dist folder"
+          git -C gh-pages push
