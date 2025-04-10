@@ -1,4 +1,4 @@
-name: NodeJS with Webpack and GitHub Pages
+name: NodeJS with Webpack
 
 on:
   push:
@@ -7,33 +7,22 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x] # Test across multiple Node versions
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
-    # Step 1: Checkout the repository
     - uses: actions/checkout@v4
 
-    # Step 2: Set up Node.js
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
-    # Step 3: Install dependencies and build with Webpack
     - name: Build
       run: |
         npm install
-        npx webpack # Builds to 'dist' by default (adjust if your output folder differs)
-
-    # Step 4: Deploy to GitHub Pages (only on push to master, not PRs)
-    - name: Deploy to GitHub Pages
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master' # Only run on push to master
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }} # Provided by GitHub
-        publish_dir: ./dist # Replace with your Webpack output folder if different
+        npx webpack
