@@ -26,6 +26,9 @@ jobs:
       # Step 4: Build the project
       - name: Build the project
         run: npm run build
+      
+      - name: ls dist
+        run: ls -lsa
 
       # Step 5: Deploy index.html, main.css, and dist folder to gh-pages
       - name: Deploy to gh-pages
