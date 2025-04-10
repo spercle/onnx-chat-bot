@@ -3,7 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main  # or the branch you want to trigger on
+      - master  # or the branch you want to trigger on
 
 jobs:
   build:
