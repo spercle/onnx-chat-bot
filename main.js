@@ -3,7 +3,7 @@ import { LLM } from './llm.js';
 import { marked } from 'marked';
 
 const MODELS = {
-  "phi3": { name: "phi3", path: "./model", externaldata: true },
+  "phi3": { name: "phi3", path: "model", externaldata: true },
   "phi3dev": { name: "phi3dev", path: "./model", externaldata: true },
 }
 
@@ -236,7 +236,7 @@ async function Init(hasFP16) {
   try {
     // Explicitly load tokenizer from ./model with debugging
     console.log("Attempting to load tokenizer from './model'");
-    tokenizer = await AutoTokenizer.from_pretrained('./model', {
+    tokenizer = await AutoTokenizer.from_pretrained('.', {
       local_files_only: true,
       // Explicitly specify file paths to avoid subpath issues
       config: './model/config.json',
