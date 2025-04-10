@@ -23,17 +23,12 @@ jobs:
       - name: Install and Build
         run: |
           npm install
-          npx webpack
-
-      - name: Check dist folder
-        run: |
-          echo "📁 dist folder contents:"
-          ls -al dist
+          npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: .
           user_name: github-actions
           user_email: github-actions@github.com
