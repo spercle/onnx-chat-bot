@@ -1,31 +1,36 @@
-name: Build and Deploy
+name: NodeJS with Webpack
 
 on:
   push:
-    branches:
-      - master  # or the branch you want to trigger on
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'  # or whatever version you're using
+          node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install and Build
+        run: |
+          npm install
+          npx webpack
 
-      - name: Build the site
-        run: npm run build
-
+      # Only deploy once (not for every node version)
       - name: Deploy to GitHub Pages
+        if: matrix.node-version == '18.x' && github.ref == 'refs/heads/master'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # or ./build or whatever your build output folder is
+          publish_dir: ./dist  # change if your output dir is different
