@@ -18,15 +18,21 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        run: npm install  # Ensures that dependencies are installed
 
       - name: Build the project
         run: npm run build
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy index.html to root of gh-pages
+        run: |
+          git clone --depth 1 --branch gh-pages https://github.com/${{ github.repository }} gh-pages
+          cp ./index.html ./gh-pages/
+          git -C gh-pages add index.html
+          git -C gh-pages commit -m "Deploy index.html"
+          git -C gh-pages push
+
+      - name: Deploy dist folder to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          # Ensuring `index.html` is at the root of `gh-pages` branch
-          keep_files: false
