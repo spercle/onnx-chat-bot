@@ -33,6 +33,7 @@ Install Web Server
 
 
 ```bash
+# Phi3-mini-4k-instruct
 mkdir model
 cd model 
 
