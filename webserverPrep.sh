@@ -91,8 +91,18 @@ cat > /var/www/html/index.html <<'EOF'
 </html>
 EOF
 
-# Set permissions
 chown www-data:www-data /var/www/html/index.html
+
+# --- Fix MIME types for .wasm and .mjs ---
+MIME_FILE="/etc/nginx/mime.types"
+
+# Add .wasm and .mjs types if not present
+if ! grep -q "application/wasm" "$MIME_FILE"; then
+    sed -i '/^types {/a\    application/wasm                      wasm;' "$MIME_FILE"
+fi
+if ! grep -q "text/javascript.*mjs" "$MIME_FILE"; then
+    sed -i '/^types {/a\    text/javascript                       mjs;' "$MIME_FILE"
+fi
 
 # Test nginx configuration
 nginx -t
@@ -100,4 +110,4 @@ nginx -t
 # Restart nginx
 systemctl restart nginx
 
-echo "nginx is installed with HTTPS and a landing page!"
+echo "nginx is installed with HTTPS, landing page, and correct .wasm/.mjs MIME types!"
