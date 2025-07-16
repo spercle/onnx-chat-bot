@@ -24,6 +24,14 @@ npm -v # Should print "10.9.2".
 
 ```
 
+Install Web Server 
+
+```bash
+ bash webserverPrep.sh
+
+```
+
+
 ```bash
 mkdir model
 cd model 
